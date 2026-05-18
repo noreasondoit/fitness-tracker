@@ -13,3 +13,4 @@ bore*
 .venv
 venv/
 env/
+old/
