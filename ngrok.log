@@ -1,0 +1,12 @@
+{"lvl":"info","msg":"no configuration paths supplied","t":"2026-05-11T20:24:29.7039702+03:00"}
+{"lvl":"info","msg":"using configuration at default config path","path":"C:\\Users\\otter\\AppData\\Local\\ngrok\\ngrok.yml","t":"2026-05-11T20:24:29.728206+03:00"}
+{"err":"\u003cnil\u003e","lvl":"info","msg":"open config file","path":"C:\\Users\\otter\\AppData\\Local\\ngrok\\ngrok.yml","t":"2026-05-11T20:24:29.7288624+03:00"}
+{"enabled":false,"lvl":"info","msg":"FIPS 140 mode","t":"2026-05-11T20:24:29.7295073+03:00"}
+{"addr":"127.0.0.1:4040","allow_hosts":null,"lvl":"info","msg":"starting web service","obj":"web","t":"2026-05-11T20:24:29.7496266+03:00"}
+{"err":"Post \"https://update.ngrok-agent.com/check\": EOF","lvl":"warn","msg":"failed to check for update","obj":"updater","t":"2026-05-11T20:24:29.9597184+03:00"}
+{"err":"authentication failed: We do not allow agents to connect to ngrok from your IP address (2a09:bac5:5152:2369::387:31).\r\n\r\nERR_NGROK_9040\r\n","lvl":"eror","msg":"failed to reconnect session","obj":"tunnels.session","t":"2026-05-11T20:24:30.0990313+03:00"}
+{"err":"authentication failed: We do not allow agents to connect to ngrok from your IP address (2a09:bac5:5152:2369::387:31).\r\n\r\nERR_NGROK_9040\r\n","lvl":"eror","msg":"session closing","obj":"tunnels.session","t":"2026-05-11T20:24:30.0990313+03:00"}
+{"lvl":"info","msg":"received stop request","obj":"app","stopReq":{},"t":"2026-05-11T20:24:30.0997137+03:00"}
+{"err":"authentication failed: We do not allow agents to connect to ngrok from your IP address (2a09:bac5:5152:2369::387:31).\r\n\r\nERR_NGROK_9040\r\n","lvl":"eror","msg":"terminating with error","obj":"app","t":"2026-05-11T20:24:30.1002169+03:00"}
+{"err":"authentication failed: We do not allow agents to connect to ngrok from your IP address (2a09:bac5:5152:2369::387:31).\r\n\r\nERR_NGROK_9040\r\n","lvl":"crit","msg":"command failed","t":"2026-05-11T20:24:30.1002884+03:00"}
+{"lvl":"info","msg":"no more state changes","obj":"tunnels.session","t":"2026-05-11T20:24:30.1002884+03:00"}

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness Tracker — Никита</title>
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fitness">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #111; --panel: #1a1a1a; --border: #333; --text: #eee; --text2: #999;
+  --accent: #f5c842; --green: #4caf50; --red: #f44336; --blue: #42a5f5;
+  --orange: #ff9800; --purple: #ab47bc; --teal: #26a69a;
+  --font: 16px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; font-size: var(--font); }
+.container { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+/* Header */
+.header { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 2px solid var(--border); margin-bottom: 8px; flex-wrap: wrap; }
+.header h1 { font-size: 22px; color: var(--accent); }
+.header .date-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 15px; }
+.header .date-nav button { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.header .date-nav button:hover { border-color: var(--accent); }
+.header .date-nav input { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 4px; width: 140px; font-size: 14px; }
+.font-ctrl { display: flex; gap: 4px; align-items: center; }
+.font-ctrl button { background: var(--panel); border: 1px solid var(--border); color: var(--text2); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.font-ctrl button:hover { border-color: var(--accent); color: var(--text); }
+.kb-hint { font-size: 11px; color: #555; text-align: center; margin-bottom: 8px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 2px solid var(--border); }
+.tab { padding: 10px 16px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+.card h3 { font-size: 16px; margin-bottom: 10px; color: var(--accent); }
+
+/* Dashboard cards */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.dash-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+.dash-card .value { font-size: 28px; font-weight: bold; }
+.dash-card .label { font-size: 12px; color: var(--text2); margin-top: 4px; text-transform: uppercase; }
+.dash-card.kcal .value { color: var(--orange); }
+.dash-card.prot .value { color: var(--blue); }
+.dash-card.mob .value { color: var(--teal); }
+.dash-card.ankle .value { color: var(--purple); }
+.dash-card.weight .value { color: var(--accent); }
+.dash-card.workout .value { font-size: 18px; color: var(--green); }
+
+/* Forms */
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 8px; }
+.form-row input, .form-row select, .form-row textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 4px; font-size: 14px; min-width: 0; }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: var(--accent); }
+.form-row input[type="number"] { width: 80px; }
+.form-row input.wide { width: 140px; }
+.form-row input.xwide { width: 100%; flex: 1; }
+.form-row textarea { flex: 1; min-height: 36px; resize: vertical; }
+.btn { background: var(--accent); color: #000; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.btn:hover { opacity: 0.85; }
+.btn.small { padding: 4px 10px; font-size: 12px; }
+.btn.danger { background: var(--red); color: #fff; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text2); font-weight: 500; text-transform: uppercase; font-size: 11px; }
+.exercise-list { list-style: none; }
+.exercise-list li { display: flex; gap: 6px; padding: 4px 0; font-size: 13px; align-items: center; }
+.exercise-list .ex-name { flex: 1; }
+.exercise-list .ex-detail { color: var(--text2); white-space: nowrap; }
+
+/* Measurements grid */
+.meas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+.meas-field { display: flex; flex-direction: column; }
+.meas-field label { font-size: 11px; color: var(--text2); text-transform: uppercase; }
+.meas-field input { width: 100%; }
+
+/* Progress chart */
+.chart-bar { display: flex; align-items: end; gap: 2px; height: 120px; margin-top: 8px; }
+.chart-bar .bar { flex: 1; background: var(--accent); min-width: 6px; border-radius: 2px 2px 0 0; position: relative; }
+.chart-bar .bar:hover { opacity: 0.8; }
+.chart-bar .bar .bar-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--text2); white-space: nowrap; }
+.empty-state { text-align: center; padding: 30px; color: var(--text2); font-size: 14px; }
+
+/* Utility */
+.mt-8 { margin-top: 8px; }
+.mb-8 { margin-bottom: 8px; }
+.text-small { font-size: 12px; color: var(--text2); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.tag.breakfast { background: #5c4a1f; color: var(--orange); }
+.tag.lunch { background: #1f3a5c; color: var(--blue); }
+.tag.dinner { background: #3d1f5c; color: var(--purple); }
+.tag.snack { background: #1f5c3a; color: var(--green); }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  .header { flex-direction: column; align-items: flex-start; }
+  .header .date-nav { margin-left: 0; }
+  .tabs { gap: 0; }
+  .tab { padding: 8px 10px; font-size: 13px; }
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+  .meas-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <h1>Fitness Tracker</h1>
+  <div class="font-ctrl">
+    <button onclick="changeFont(-1)" title="Уменьшить шрифт">A-</button>
+    <button onclick="changeFont(1)" title="Увеличить шрифт">A+</button>
+    <button id="installBtn" onclick="installApp()" style="display:none" title="Установить как приложение">Установить</button>
+  </div>
+  <div class="date-nav">
+    <button onclick="changeDate(-1)">◀</button>
+    <input type="date" id="selectedDate" onchange="loadAll()">
+    <button onclick="changeDate(1)">▶</button>
+    <button onclick="setToday()">Сегодня</button>
+  </div>
+</div>
+<div class="kb-hint">Клавиши: 1-Дашборд 2-Питание 3-Трен. 4-Мобил. 5-Голеност. 6-Замеры 7-Заметки</div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs">
+  <button class="tab active" data-tab="dash">Дашборд</button>
+  <button class="tab" data-tab="meals">Питание</button>
+  <button class="tab" data-tab="workouts">Тренировки</button>
+  <button class="tab" data-tab="mobility">Мобильность</button>
+  <button class="tab" data-tab="ankle">Голеностоп</button>
+  <button class="tab" data-tab="measurements">Замеры</button>
+  <button class="tab" data-tab="notes">Заметки</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="panel active" id="panel-dash">
+  <div class="dash-grid" id="dashCards"></div>
+  <div class="card">
+    <h3>Вес (30 дней)</h3>
+    <div class="chart-bar" id="weightChart"></div>
+  </div>
+  <div class="card">
+    <h3>Калории (7 дней)</h3>
+    <div class="chart-bar" id="calChart"></div>
+  </div>
+</div>
+
+<!-- MEALS -->
+<div class="panel" id="panel-meals">
+  <div class="card">
+    <h3>Добавить приём пищи</h3>
+    <div class="form-row">
+      <select id="mealType">
+        <option value="breakfast">Завтрак</option>
+        <option value="lunch">Обед</option>
+        <option value="dinner">Ужин</option>
+        <option value="snack">Перекус</option>
+      </select>
+      <input type="text" id="mealDesc" placeholder="Что ел?" class="xwide">
+      <input type="number" id="mealCal" placeholder="Ккал" min="0">
+      <input type="number" id="mealProt" placeholder="Белок г" min="0" step="0.1">
+      <input type="number" id="mealCarbs" placeholder="Угл г" min="0" step="0.1">
+      <input type="number" id="mealFat" placeholder="Жир г" min="0" step="0.1">
+      <button class="btn" onclick="addMeal()">+</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Сегодня: <span id="mealsToday">—</span></h3>
+    <div id="mealsList"></div>
+  </div>
+</div>
+
+<!-- WORKOUTS -->
+<div class="panel" id="panel-workouts">
+  <div class="card">
+    <h3>Тренировка</h3>
+    <div class="form-row">
+      <input type="text" id="woName" placeholder="Название (напр. Грудь+Трицепс)" class="xwide">
+      <input type="number" id="woDur" placeholder="Мин" min="0" style="width:70px">
+      <button class="btn" onclick="saveWorkout()">Сохранить</button>
+    </div>
+    <div class="form-row mt-8">
+      <input type="text" id="exName" placeholder="Упражнение" style="width:180px">
+      <input type="number" id="exSets" placeholder="Подходы" min="1" value="3" style="width:80px">
+      <input type="number" id="exReps" placeholder="Повторы" min="1" value="10" style="width:80px">
+      <input type="number" id="exWeight" placeholder="Вес кг" min="0" step="0.5" value="0" style="width:80px">
+      <button class="btn small" onclick="addExercise()">Добавить</button>
+    </div>
+    <ul class="exercise-list" id="exList"></ul>
+    <input type="hidden" id="woExercises" value="[]">
+    <input type="hidden" id="woDate" value="">
+  </div>
+  <div class="card">
+    <h3>История тренировок</h3>
+    <div id="woHistory"></div>
+  </div>
+</div>
+
+<!-- MOBILITY -->
+<div class="panel" id="panel-mobility">
+  <div class="card">
+    <h3>Мобильность / Растяжка</h3>
+    <div class="form-row">
+      <select id="mobArea">
+        <option value="neck">Шея</option>
+        <option value="shoulders">Плечи</option>
+        <option value="spine">Позвоночник</option>
+        <option value="hips">Таз/Бёдра</option>
+        <option value="knees">Колени</option>
+        <option value="ankles">Голеностоп</option>
+        <option value="full_body">Всё тело</option>
+        <option value="right_side">Правая сторона (гипертонус)</option>
+      </select>
+      <select id="mobSide">
+        <option value="both">Обе стороны</option>
+        <option value="right">Правая</option>
+        <option value="left">Левая</option>
+      </select>
+      <input type="text" id="mobExercise" placeholder="Упражнение" class="xwide">
+      <input type="number" id="mobDur" placeholder="Мин" min="1" value="5">
+      <input type="number" id="mobPain" placeholder="Боль 0-10" min="0" max="10" value="0" style="width:80px">
+      <button class="btn" onclick="addMobility()">+</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Сегодня: <span id="mobToday">—</span> мин</h3>
+    <div id="mobList"></div>
+  </div>
+</div>
+
+<!-- ANKLE -->
+<div class="panel" id="panel-ankle">
+  <div class="card">
+    <h3>Упражнения на голеностоп</h3>
+    <div class="form-row">
+      <input type="text" id="ankEx" placeholder="Упражнение" class="xwide">
+      <input type="number" id="ankSets" placeholder="Подходы" min="1" value="3" style="width:80px">
+      <input type="number" id="ankReps" placeholder="Повторы" min="1" value="15" style="width:80px">
+      <input type="number" id="ankDiff" placeholder="Сложность 1-10" min="1" max="10" value="1" style="width:100px">
+      <button class="btn" onclick="addAnkle()">+</button>
+    </div>
+    <p class="text-small mt-8">Рекомендуемые: подъёмы на носки, баланс на одной ноге, вращения стопы, ходьба на пятках/носках, резина на разгибание</p>
+  </div>
+  <div class="card">
+    <h3>История</h3>
+    <div id="ankleHistory"></div>
+  </div>
+</div>
+
+<!-- MEASUREMENTS -->
+<div class="panel" id="panel-measurements">
+  <div class="card">
+    <h3>Замеры тела</h3>
+    <div class="form-row">
+      <input type="number" id="msWeight" placeholder="Вес кг" step="0.1" style="width:100px">
+      <button class="btn" onclick="saveMeasurements()">Сохранить</button>
+    </div>
+    <div class="meas-grid mt-8">
+      <div class="meas-field"><label>Шея</label><input type="number" id="msNeck" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Плечи</label><input type="number" id="msShoulders" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Грудь</label><input type="number" id="msChest" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Бицепс Л</label><input type="number" id="msBicepsL" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Бицепс П</label><input type="number" id="msBicepsR" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Предпл Л</label><input type="number" id="msForearmL" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Предпл П</label><input type="number" id="msForearmR" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Талия</label><input type="number" id="msWaist" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Бёдра</label><input type="number" id="msHips" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Бедро Л</label><input type="number" id="msThighL" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Бедро П</label><input type="number" id="msThighR" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Икра Л</label><input type="number" id="msCalfL" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Икра П</label><input type="number" id="msCalfR" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Голеност Л</label><input type="number" id="msAnkleL" step="0.1" placeholder="см"></div>
+      <div class="meas-field"><label>Голеност П</label><input type="number" id="msAnkleR" step="0.1" placeholder="см"></div>
+    </div>
+    <textarea id="msNote" placeholder="Заметка" style="width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px;border-radius:4px;font-size:14px;" rows="2"></textarea>
+  </div>
+  <div class="card">
+    <h3>История замеров</h3>
+    <div id="msHistory" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="panel" id="panel-notes">
+  <div class="card">
+    <h3>Новая заметка</h3>
+    <div class="form-row">
+      <select id="noteCat">
+        <option value="general">Общее</option>
+        <option value="nutrition">Питание</option>
+        <option value="workout">Тренировка</option>
+        <option value="mobility">Мобильность</option>
+        <option value="health">Самочувствие</option>
+        <option value="goal">Цели</option>
+      </select>
+      <textarea id="noteContent" placeholder="Что на уме?" rows="2"></textarea>
+      <button class="btn" onclick="addNote()">Записать</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Все заметки</h3>
+    <div id="notesList"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const API = "";
+const dateEl = document.getElementById("selectedDate");
+let workoutExercises = [];
+
+// Init
+dateEl.value = todayStr();
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+loadAll();
+
+// PWA install
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("installBtn").style.display = "inline-block";
+});
+async function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const result = await deferredPrompt.userChoice;
+  if (result.outcome === "accepted") document.getElementById("installBtn").style.display = "none";
+  deferredPrompt = null;
+}
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("/static/sw.js"); });
+}
+
+// Font size
+let fontSize = 16;
+function changeFont(d) {
+  fontSize = Math.max(12, Math.min(28, fontSize + d * 2));
+  document.documentElement.style.setProperty("--font", fontSize + "px");
+  try { localStorage.setItem("fitness-font", fontSize); } catch(e) {}
+}
+try { const saved = localStorage.getItem("fitness-font"); if (saved) { fontSize = parseInt(saved); document.documentElement.style.setProperty("--font", fontSize + "px"); } } catch(e) {}
+
+// Keyboard shortcuts
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+  const tabs = ["dash","meals","workouts","mobility","ankle","measurements","notes"];
+  const num = parseInt(e.key);
+  if (num >= 1 && num <= 7) { switchTab(tabs[num-1]); }
+  if (e.key === "ArrowLeft") changeDate(-1);
+  if (e.key === "ArrowRight") changeDate(1);
+  if (e.key === "t" || e.key === "T") setToday();
+});
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function setToday() { dateEl.value = todayStr(); loadAll(); }
+function changeDate(d) {
+  let dt = new Date(dateEl.value + "T00:00:00");
+  dt.setDate(dt.getDate() + d);
+  dateEl.value = dt.toISOString().slice(0,10);
+  loadAll();
+}
+function fmt(d) { return d.slice(8,10) + "." + d.slice(5,7); }
+function fmtFull(d) { return d.slice(8,10) + "." + d.slice(5,7) + "." + d.slice(0,4); }
+function getDate() { return dateEl.value; }
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+  document.getElementById("panel-" + tab).classList.add("active");
+  loadTab(tab);
+}
+
+function loadTab(tab) {
+  switch(tab) {
+    case "dash": loadDash(); break;
+    case "meals": loadMeals(); break;
+    case "workouts": loadWorkouts(); break;
+    case "mobility": loadMobility(); break;
+    case "ankle": loadAnkle(); break;
+    case "measurements": loadMeasurements(); break;
+    case "notes": loadNotes(); break;
+  }
+}
+
+async function loadAll() { loadTab(document.querySelector(".tab.active").dataset.tab); }
+
+async function loadDash() {
+  const dt = getDate();
+  const sum = await fetch(API + "/api/summary/" + dt).then(r => r.json());
+  document.getElementById("dashCards").innerHTML = `
+    <div class="dash-card kcal"><div class="value">${sum.calories}</div><div class="label">Калории сегодня</div></div>
+    <div class="dash-card prot"><div class="value">${sum.protein}г</div><div class="label">Белок сегодня</div></div>
+    <div class="dash-card mob"><div class="value">${sum.mobility_min}</div><div class="label">Мобильность мин</div></div>
+    <div class="dash-card ankle"><div class="value">${sum.ankle_exercises}</div><div class="label">Упр. голеностоп</div></div>
+    <div class="dash-card weight"><div class="value">${sum.weight ?? "—"}</div><div class="label">Вес кг</div></div>
+    <div class="dash-card workout"><div class="value">${sum.workout ? sum.workout.name : "—"}</div><div class="label">Тренировка</div></div>
+  `;
+
+  // Weight chart
+  const wData = await fetch(API + "/api/weight").then(r => r.json());
+  if (wData.length) {
+    const maxW = Math.max(...wData.map(d => d.weight_kg));
+    const minW = Math.min(...wData.map(d => d.weight_kg));
+    const range = Math.max(maxW - minW, 2);
+    const recent = wData.slice(0, 30).reverse();
+    document.getElementById("weightChart").innerHTML = recent.map(d => {
+      const h = ((d.weight_kg - minW) / range) * 100;
+      return `<div class="bar" style="height:${h}%;background:${d.weight_kg >= 70 ? 'var(--green)' : 'var(--orange)'}" title="${fmtFull(d.date)}: ${d.weight_kg}кг"><span class="bar-label">${fmt(d.date)}</span></div>`;
+    }).join("");
+  }
+
+  // Cal chart
+  const mealsData = await fetch(API + "/api/meals").then(r => r.json());
+  const calByDay = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(dateEl.value + "T00:00:00");
+    d.setDate(d.getDate() - i);
+    calByDay[d.toISOString().slice(0,10)] = 0;
+  }
+  mealsData.forEach(m => { if (calByDay[m.date] !== undefined) calByDay[m.date] += m.calories; });
+  const calDays = Object.entries(calByDay).reverse();
+  const maxCal = Math.max(...calDays.map(d => d[1]), 500);
+  document.getElementById("calChart").innerHTML = calDays.map(([d, cal]) => {
+    const h = (cal / maxCal) * 100;
+    return `<div class="bar" style="height:${h}%;background:var(--orange)" title="${fmtFull(d)}: ${cal} ккал"><span class="bar-label">${fmt(d)}</span></div>`;
+  }).join("");
+}
+
+// ---- MEALS ----
+async function addMeal() {
+  const data = {
+    date: getDate(),
+    meal_type: document.getElementById("mealType").value,
+    description: document.getElementById("mealDesc").value,
+    calories: parseInt(document.getElementById("mealCal").value) || 0,
+    protein_g: parseFloat(document.getElementById("mealProt").value) || 0,
+    carbs_g: parseFloat(document.getElementById("mealCarbs").value) || 0,
+    fat_g: parseFloat(document.getElementById("mealFat").value) || 0,
+    note: ""
+  };
+  if (!data.description) return alert("Опиши что ел");
+  await fetch(API + "/api/meals", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(data) });
+  ["mealDesc","mealCal","mealProt","mealCarbs","mealFat"].forEach(id => document.getElementById(id).value = "");
+  loadMeals();
+  loadDash();
+}
+
+async function loadMeals() {
+  const dt = getDate();
+  const meals = await fetch(API + "/api/meals").then(r => r.json());
+  const today = meals.filter(m => m.date === dt);
+  const totCal = today.reduce((s, m) => s + m.calories, 0);
+  const totProt = today.reduce((s, m) => s + m.protein_g, 0);
+  document.getElementById("mealsToday").textContent = `${totCal} ккал / ${totProt.toFixed(1)}г белка`;
+  const tags = {breakfast:"Завтрак",lunch:"Обед",dinner:"Ужин",snack:"Перекус"};
+  document.getElementById("mealsList").innerHTML = today.length ? `
+    <table><tr><th>Тип</th><th>Описание</th><th>Ккал</th><th>Б</th><th>У</th><th>Ж</th><th></th></tr>
+    ${today.map(m => `<tr>
+      <td><span class="tag ${m.meal_type}">${tags[m.meal_type]||m.meal_type}</span></td>
+      <td>${esc(m.description)}</td>
+      <td>${m.calories}</td><td>${m.protein_g}</td><td>${m.carbs_g}</td><td>${m.fat_g}</td>
+      <td><button class="btn small danger" onclick="delMeal(${m.id})">×</button></td>
+    </tr>`).join("")}</table>
+  ` : `<div class="empty-state">Нет записей за сегодня</div>`;
+}
+
+async function delMeal(id) { await fetch(API + "/api/meals/" + id, {method:"DELETE"}); loadMeals(); loadDash(); }
+
+// ---- WORKOUTS ----
+function addExercise() {
+  const name = document.getElementById("exName").value;
+  if (!name) return;
+  workoutExercises.push({
+    name,
+    sets: parseInt(document.getElementById("exSets").value) || 3,
+    reps: parseInt(document.getElementById("exReps").value) || 10,
+    weight: parseFloat(document.getElementById("exWeight").value) || 0
+  });
+  ["exName","exSets","exReps","exWeight"].forEach(id => document.getElementById(id).value = id === "exSets" ? "3" : id === "exReps" ? "10" : id === "exWeight" ? "0" : "");
+  renderExList();
+}
+
+function renderExList() {
+  document.getElementById("exList").innerHTML = workoutExercises.map((ex, i) => `
+    <li><span class="ex-name">${esc(ex.name)}</span>
+    <span class="ex-detail">${ex.sets}×${ex.reps} ${ex.weight ? ex.weight + 'кг' : ''}</span>
+    <button class="btn small danger" onclick="removeEx(${i})">×</button></li>
+  `).join("");
+}
+
+function removeEx(i) { workoutExercises.splice(i, 1); renderExList(); }
+
+async function saveWorkout() {
+  const data = {
+    date: getDate(),
+    name: document.getElementById("woName").value || "Тренировка",
+    exercises: workoutExercises,
+    duration_min: parseInt(document.getElementById("woDur").value) || 0,
+    note: ""
+  };
+  await fetch(API + "/api/workouts", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(data) });
+  workoutExercises = [];
+  ["woName","woDur"].forEach(id => document.getElementById(id).value = "");
+  renderExList();
+  loadWorkouts();
+  loadDash();
+}
+
+async function loadWorkouts() {
+  const wo = await fetch(API + "/api/workouts").then(r => r.json());
+  const dt = getDate();
+  const today = wo.find(w => w.date === dt);
+  if (today) {
+    document.getElementById("woName").value = today.name;
+    document.getElementById("woDur").value = today.duration_min;
+    workoutExercises = today.exercises || [];
+    renderExList();
+  } else {
+    document.getElementById("woName").value = "";
+    document.getElementById("woDur").value = "";
+    workoutExercises = [];
+    renderExList();
+  }
+  document.getElementById("woHistory").innerHTML = wo.length ? wo.map(w => `
+    <div class="card" style="margin-bottom:8px">
+      <strong>${fmtFull(w.date)}</strong> — ${esc(w.name)} ${w.duration_min ? '('+w.duration_min+' мин)' : ''}
+      ${w.exercises.length ? '<ul class="exercise-list">' + w.exercises.map(e => `<li><span class="ex-name">${esc(e.name)}</span><span class="ex-detail">${e.sets}×${e.reps} ${e.weight?e.weight+'кг':''}</span></li>`).join("") + '</ul>' : ''}
+    </div>
+  `).join("") : `<div class="empty-state">Нет тренировок</div>`;
+}
+
+// ---- MOBILITY ----
+async function addMobility() {
+  const ex = document.getElementById("mobExercise").value;
+  if (!ex) return;
+  const data = {
+    date: getDate(),
+    area: document.getElementById("mobArea").value,
+    exercise: ex,
+    duration_min: parseInt(document.getElementById("mobDur").value) || 5,
+    pain_level: parseInt(document.getElementById("mobPain").value) || 0,
+    side: document.getElementById("mobSide").value,
+    note: ""
+  };
+  await fetch(API + "/api/mobility", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data) });
+  ["mobExercise","mobPain"].forEach(id => document.getElementById(id).value = "");
+  loadMobility();
+  loadDash();
+}
+
+async function loadMobility() {
+  const dt = getDate();
+  const mob = await fetch(API + "/api/mobility").then(r => r.json());
+  const today = mob.filter(m => m.date === dt);
+  const totMin = today.reduce((s, m) => s + m.duration_min, 0);
+  document.getElementById("mobToday").textContent = totMin;
+  const sides = {both:"Обе",right:"Правая",left:"Левая"};
+  document.getElementById("mobList").innerHTML = today.length ? `
+    <table><tr><th>Зона</th><th>Сторона</th><th>Упражнение</th><th>Мин</th><th>Боль</th><th></th></tr>
+    ${today.map(m => `<tr>
+      <td>${esc(m.area)}</td><td>${sides[m.side]||m.side}</td>
+      <td>${esc(m.exercise)}</td><td>${m.duration_min}</td>
+      <td>${"⭐".repeat(m.pain_level)||"—"}</td>
+      <td><button class="btn small danger" onclick="delMob(${m.id})">×</button></td>
+    </tr>`).join("")}</table>
+  ` : `<div class="empty-state">Нет записей за сегодня</div>`;
+}
+
+async function delMob(id) { await fetch(API + "/api/mobility/" + id, {method:"DELETE"}); loadMobility(); loadDash(); }
+
+// ---- ANKLE ----
+async function addAnkle() {
+  const ex = document.getElementById("ankEx").value;
+  if (!ex) return;
+  const data = {
+    date: getDate(),
+    exercise: ex,
+    sets: parseInt(document.getElementById("ankSets").value) || 3,
+    reps: parseInt(document.getElementById("ankReps").value) || 15,
+    difficulty: parseInt(document.getElementById("ankDiff").value) || 1,
+    note: ""
+  };
+  await fetch(API + "/api/ankle", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data) });
+  ["ankEx","ankDiff"].forEach(id => document.getElementById(id).value = "");
+  loadAnkle();
+  loadDash();
+}
+
+async function loadAnkle() {
+  const ank = await fetch(API + "/api/ankle").then(r => r.json());
+  document.getElementById("ankleHistory").innerHTML = ank.length ? `
+    <table><tr><th>Дата</th><th>Упражнение</th><th>Подходы</th><th>Повторы</th><th>Сложность</th><th></th></tr>
+    ${ank.map(a => `<tr>
+      <td>${fmtFull(a.date)}</td><td>${esc(a.exercise)}</td>
+      <td>${a.sets}</td><td>${a.reps}</td>
+      <td>${"⬆".repeat(a.difficulty)||"—"}</td>
+      <td><button class="btn small danger" onclick="delAnkle(${a.id})">×</button></td>
+    </tr>`).join("")}</table>
+  ` : `<div class="empty-state">Нет записей</div>`;
+}
+
+async function delAnkle(id) { await fetch(API + "/api/ankle/" + id, {method:"DELETE"}); loadAnkle(); loadDash(); }
+
+// ---- MEASUREMENTS ----
+async function saveMeasurements() {
+  const data = { date: getDate(), note: document.getElementById("msNote").value || "" };
+  const fields = ["msWeight","msNeck","msShoulders","msChest","msBicepsL","msBicepsR","msForearmL","msForearmR","msWaist","msHips","msThighL","msThighR","msCalfL","msCalfR","msAnkleL","msAnkleR"];
+  const keys = ["weight_kg","neck_cm","shoulders_cm","chest_cm","biceps_l_cm","biceps_r_cm","forearm_l_cm","forearm_r_cm","waist_cm","hips_cm","thigh_l_cm","thigh_r_cm","calf_l_cm","calf_r_cm","ankle_l_cm","ankle_r_cm"];
+  fields.forEach((f, i) => {
+    const v = parseFloat(document.getElementById(f).value);
+    if (!isNaN(v)) data[keys[i]] = v;
+  });
+  await fetch(API + "/api/measurements", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data) });
+  loadMeasurements();
+}
+
+async function loadMeasurements() {
+  const ms = await fetch(API + "/api/measurements").then(r => r.json());
+  if (!ms.length) { document.getElementById("msHistory").innerHTML = `<div class="empty-state">Нет замеров</div>`; return; }
+  const labels = ["Дата","Вес","Шея","Плечи","Грудь","БицЛ","БицП","ПрЛ","ПрП","Талия","Бёдра","БедЛ","БедП","ИкЛ","ИкП","ГолЛ","ГолП"];
+  const keys = ["date","weight_kg","neck_cm","shoulders_cm","chest_cm","biceps_l_cm","biceps_r_cm","forearm_l_cm","forearm_r_cm","waist_cm","hips_cm","thigh_l_cm","thigh_r_cm","calf_l_cm","calf_r_cm","ankle_l_cm","ankle_r_cm"];
+  document.getElementById("msHistory").innerHTML = `
+    <table><tr>${labels.map(l => `<th>${l}</th>`).join("")}</tr>
+    ${ms.map(m => `<tr>${keys.map(k => `<td>${m[k] ? (k==="date" ? fmtFull(m[k]) : m[k]) : "—"}</td>`).join("")}</tr>`).join("")}</table>
+  `;
+}
+
+// ---- NOTES ----
+async function addNote() {
+  const content = document.getElementById("noteContent").value;
+  if (!content) return;
+  await fetch(API + "/api/notes", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({
+    date: getDate(),
+    content,
+    category: document.getElementById("noteCat").value
+  })});
+  document.getElementById("noteContent").value = "";
+  loadNotes();
+}
+
+async function loadNotes() {
+  const notes = await fetch(API + "/api/notes").then(r => r.json());
+  const cats = {general:"Общее",nutrition:"Питание",workout:"Тренировка",mobility:"Мобильность",health:"Самочувствие",goal:"Цели"};
+  document.getElementById("notesList").innerHTML = notes.length ? notes.map(n => `
+    <div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span class="text-small">${fmtFull(n.date)} · <span class="tag" style="background:var(--panel);color:var(--text2)">${cats[n.category]||n.category}</span></span>
+        <button class="btn small danger" onclick="delNote(${n.id})">×</button>
+      </div>
+      <div style="white-space:pre-wrap">${esc(n.content)}</div>
+    </div>
+  `).join("") : `<div class="empty-state">Нет заметок</div>`;
+}
+
+async function delNote(id) { await fetch(API + "/api/notes/" + id, {method:"DELETE"}); loadNotes(); }
+
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+</script>
+</body>
+</html>
