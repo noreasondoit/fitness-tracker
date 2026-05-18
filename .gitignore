@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.log
+*.out
+*.bat
+*.ps1
+tunnel-*.txt
+ngrok*
+bore*
+.env
+.venv
+venv/
+env/
